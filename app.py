@@ -1,11 +1,14 @@
-from flask import Flask, render_template, request, jsonify, flash
+from flask import Flask, render_template, request, jsonify, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from textblob import TextBlob
 from datetime import datetime
 import random
 import os
 
-app = Flask(__name__)
+# Get the current directory path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(__name__, template_folder=current_dir)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'entries.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -87,7 +90,7 @@ keyword_map = {
     'screen fatigue': ["🌳 Take outdoor breaks.", "🧘 Try eye relaxation exercises."],
     'waiting': ["🎧 Listen to an inspiring podcast.", "📖 Read a short story."],
     'expectations': ["💡 Communicate clearly with others.", "🎯 Set personal boundaries."],
-    'moving on': ["📝 List what you’ve learned.", "🌱 Focus on new beginnings."],
+    'moving on': ["📝 List what you've learned.", "🌱 Focus on new beginnings."],
     'health': ["🚶‍♂️ Take a daily walk.", "🍎 Eat nutritious snacks."],
     'illness': ["💬 Talk to a health professional.", "📖 Learn more about your condition."],
     'parenting': ["🧸 Plan quality time with your child.", "📚 Read about positive parenting."],
@@ -119,10 +122,8 @@ keyword_map = {
     'sharing': ["📝 Post a positive message.", "📸 Share happy memories with friends."],
     'hope': ["🌅 Visualize a brighter future.", "📝 Write about what you look forward to."],
     'kindness': ["💌 Write an anonymous compliment.", "🌻 Do one good deed today."],
-    'gratitude': ["📝 List 3 things you’re grateful for.", "💬 Share appreciation with someone."]
+    'gratitude': ["📝 List 3 things you're grateful for.", "💬 Share appreciation with someone."]
 }
-
-
 
 # Add over 100,000 keywords dynamically
 for i in range(11, 100011):
@@ -184,7 +185,8 @@ def dashboard():
             flash('📝 Entry saved successfully!', 'success')
 
     entries = MoodEntry.query.order_by(MoodEntry.date.desc()).all()
-    return render_template('dashboard.html', entries=entries)
+    # Changed from dashboard.html to index.html
+    return render_template('index.html', entries=entries)
 
 @app.route('/mood-data')
 def mood_data():
@@ -192,6 +194,11 @@ def mood_data():
     dates = [entry.date.strftime("%Y-%m-%d") for entry in entries]
     sentiments = [entry.sentiment for entry in entries]
     return jsonify({'dates': dates, 'sentiments': sentiments})
+
+# Serve static files from root directory
+@app.route('/<path:filename>')
+def custom_static(filename):
+    return send_from_directory('.', filename)
 
 def create_tables():
     with app.app_context():
