@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindMend - Mood Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</head>
+<body>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }} animate__animated animate__bounceIn">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <header class="dashboard-header animate__animated animate__fadeInDown">
+            <h1>🌈 MindMend Mental Health Tracker</h1>
+            <p>Track your emotions and receive personalized suggestions</p>
+        </header>
+
+        <div class="mood-form-container">
+            <form method="POST" id="mood-form">
+                <div class="form-group">
+                    <label>😊 How are you feeling today?</label>
+                    <div class="mood-options">
+                        <label class="mood-option">
+                            <input type="radio" name="mood" value="happy" required>
+                            <span class="emoji-bubble">😊 Happy</span>
+                        </label>
+                        <label class="mood-option">
+                            <input type="radio" name="mood" value="sad">
+                            <span class="emoji-bubble">😢 Sad</span>
+                        </label>
+                        <label class="mood-option">
+                            <input type="radio" name="mood" value="angry">
+                            <span class="emoji-bubble">😠 Angry</span>
+                        </label>
+                        <label class="mood-option">
+                            <input type="radio" name="mood" value="anxious">
+                            <span class="emoji-bubble">😰 Anxious</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Journal your thoughts</label>
+                    <textarea name="journal" placeholder="What's on your mind today?" required></textarea>
+                </div>
+
+                <button type="submit" class="ripple">💾 Save Entry</button>
+            </form>
+        </div>
+
+        <div class="chart-container">
+            <h2>📈 Your Mood Journey</h2>
+            <div class="chart-wrapper">
+                <canvas id="moodChart"></canvas>
+                <div class="chart-loading">⏳ Loading your mood chart...</div>
+            </div>
+        </div>
+
+        <div class="entries">
+            <h2>📖 Past Entries</h2>
+            <div class="entry-cards">
+                {% for entry in entries %}
+                    <div class="entry-card">
+                        <div class="entry-header">
+                            <span class="mood-emoji">
+                                {% if entry.mood == "happy" %}😊
+                                {% elif entry.mood == "sad" %}😢
+                                {% elif entry.mood == "angry" %}😠
+                                {% else %}😰
+                                {% endif %}
+                            </span>
+                            <h3>{{ entry.date.strftime("%B %d, %Y %I:%M %p") }}</h3>
+                            <div class="sentiment-badge">
+                                {{ "%.2f"|format(entry.sentiment) }}
+                            </div>
+                        </div>
+                        <p class="journal-text">{{ entry.journal }}</p>
+
+                        <div class="suggestions-box">
+                            <h4>✨ Personalized Suggestions</h4>
+                            <ul>
+                                {% for suggestion in entry.suggestions.split('|') %}
+                                    <li class="suggestion-item" {% if "Immediate help" in suggestion %}data-crisis="true"{% endif %}>
+                                        <span class="suggestion-emoji">{{ suggestion.split(' ')[0] }}</span>
+                                        {{ suggestion }}
+                                        {% if "http" in suggestion or "www." in suggestion or "crisistextline.org" in suggestion %}
+                                            <a href="https://{{ suggestion.split(' ')[-1] }}" target="_blank">🔗</a>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-emoji">📝</div>
+                        <h3>No entries yet!</h3>
+                        <p>Start by adding your first mood entry</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="emergency-fab ripple">
+            <a href="https://www.crisistextline.org" target="_blank">
+                🆘 Emergency Help
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html>
